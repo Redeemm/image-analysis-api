@@ -38,7 +38,4 @@ async def analyze_image(request: AnalysisRequest):
         raise
     except Exception as e:
         logger.error(f"Failed to analyze image: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to analyze image: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to analyze image: {str(e)}")

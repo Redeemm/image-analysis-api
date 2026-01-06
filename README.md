@@ -5,14 +5,16 @@ A FastAPI-based backend service for mobile image upload and analysis.
 ## Features
 
 - Image upload endpoint with validation (JPEG/PNG, max 5MB)
-- Mock image analysis with structured JSON responses
+- Mock image analysis with detailed structured JSON responses
+- API key authentication for endpoint security
 - Structured logging with correlation IDs for request tracing
+- Standardized error responses with error codes
 - API versioning (`/api/v1/`)
 - Pydantic models for type-safe request/response validation
 - Environment-based configuration
+- Comprehensive unit and integration test suite
 - Clean separation of concerns (routes, services, utilities, models)
 - CORS support for mobile app integration
-- Comprehensive error handling
 - Docker support
 
 ## Requirements
@@ -59,13 +61,28 @@ Once running, interactive documentation is available at:
 - **Swagger UI:** http://localhost:8000/api/v1/docs
 - **ReDoc:** http://localhost:8000/api/v1/redoc
 
+## Authentication
+
+All API endpoints (except `/` and `/health`) require API key authentication.
+
+Include the API key in the `X-API-Key` header:
+
+```bash
+X-API-Key: your-secret-api-key-here
+```
+
+Set your API key in the `.env` file:
+```
+API_KEY=your-secret-api-key-here
+```
+
 ## Available Endpoints
 
 ### Health Check
 
 **GET /**
 
-Returns service status and version information.
+Returns service status and version information. No authentication required.
 
 ```bash
 curl http://localhost:8000/
@@ -75,15 +92,17 @@ curl http://localhost:8000/
 
 **POST /api/v1/upload**
 
-Upload an image for analysis.
+Upload an image for analysis. Requires authentication.
 
 **Request:**
+- Headers: `X-API-Key`
 - Content-Type: `multipart/form-data`
 - Body: `file` (JPEG or PNG, max 5MB)
 
 **Example:**
 ```bash
 curl -X POST "http://localhost:8000/api/v1/upload" \
+  -H "X-API-Key: your-secret-api-key-here" \
   -F "file=@/path/to/image.jpg"
 ```
 
@@ -107,9 +126,11 @@ Response includes headers:
 
 **POST /api/v1/analyze**
 
-Analyze a previously uploaded image.
+Analyze a previously uploaded image. Requires authentication.
 
 **Request:**
+- Headers: `X-API-Key`, `Content-Type: application/json`
+- Body:
 ```json
 {
   "image_id": "abc123-def456-ghi789"
@@ -119,6 +140,7 @@ Analyze a previously uploaded image.
 **Example:**
 ```bash
 curl -X POST "http://localhost:8000/api/v1/analyze" \
+  -H "X-API-Key: your-secret-api-key-here" \
   -H "Content-Type: application/json" \
   -d '{"image_id":"abc123-def456-ghi789"}'
 ```
@@ -159,6 +181,48 @@ curl -X POST "http://localhost:8000/api/v1/analyze" \
 }
 ```
 
+### Error Responses
+
+All error responses follow a standardized format:
+
+```json
+{
+  "success": false,
+  "timestamp": "2026-01-06T14:05:22Z",
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Detailed error message",
+    "field": "field_name"
+  },
+  "correlation_id": "abc123-def456"
+}
+```
+
+**Common Error Codes:**
+
+- `AUTHENTICATION_ERROR`: Missing or invalid API key (401)
+- `VALIDATION_ERROR`: Request validation failed (400/422)
+- `FILE_VALIDATION_ERROR`: File upload validation failed (400)
+- `RESOURCE_NOT_FOUND`: Requested resource not found (404)
+- `INTERNAL_SERVER_ERROR`: Unexpected server error (500)
+
+**Example Error:**
+```bash
+curl -X POST "http://localhost:8000/api/v1/upload" \
+  -F "file=@large_image.jpg"
+
+# Response (401):
+{
+  "success": false,
+  "timestamp": "2026-01-06T14:05:22Z",
+  "error": {
+    "code": "AUTHENTICATION_ERROR",
+    "message": "Missing API key. Include X-API-Key header."
+  },
+  "correlation_id": "f8e3a123-45b6-78c9"
+}
+```
+
 ## Project Structure
 
 ```
@@ -176,12 +240,20 @@ image-analysis-api/
 │   │   ├── image_service.py        # Image storage logic
 │   │   └── analysis_service.py     # Mock analysis logic
 │   ├── middleware/
-│   │   └── logging.py              # Request logging middleware
+│   │   ├── logging.py              # Request logging middleware
+│   │   └── authentication.py       # API key authentication
 │   └── utils/
 │       ├── validators.py           # Validation utilities
-│       └── logger.py               # Structured logging
+│       ├── logger.py               # Structured logging
+│       ├── exceptions.py           # Custom exceptions
+│       └── error_handlers.py       # Global error handlers
+├── tests/
+│   ├── conftest.py                  # Pytest fixtures
+│   ├── test_services.py             # Unit tests
+│   └── test_api.py                  # Integration tests
 ├── uploads/                         # Image storage directory
 ├── .env.example                     # Environment configuration template
+├── pytest.ini                       # Pytest configuration
 ├── requirements.txt                 # Python dependencies
 ├── Dockerfile                       # Container configuration
 └── README.md
@@ -196,6 +268,7 @@ Key settings:
 - `APP_VERSION`: Application version
 - `ENVIRONMENT`: Environment (development, staging, production)
 - `API_V1_PREFIX`: API version prefix
+- `API_KEY`: API key for authentication
 - `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 - `MAX_FILE_SIZE`: Maximum upload size in bytes
 - `UPLOAD_DIR`: Image storage directory
@@ -204,18 +277,59 @@ Key settings:
 
 ## Testing
 
-Example workflow:
+The project includes comprehensive unit and integration tests using pytest.
+
+### Running Tests
+
+```bash
+# Install test dependencies
+pip install -r requirements.txt
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=app --cov-report=term-missing
+
+# Run only unit tests
+pytest -m unit
+
+# Run only integration tests
+pytest -m integration
+
+# Run with verbose output
+pytest -v
+```
+
+### Test Structure
+
+```
+tests/
+├── conftest.py           # Pytest fixtures and configuration
+├── test_services.py      # Unit tests for services
+└── test_api.py          # Integration tests for API endpoints
+```
+
+### Test Coverage
+
+- **Unit Tests**: Services (image_service, analysis_service)
+- **Integration Tests**: API endpoints (upload, analyze, authentication)
+- **Error Handling**: Validation errors, authentication errors, not found errors
+
+### Example Workflow
 
 ```bash
 # Start the server
 uvicorn app.main:app --reload
 
-# Upload an image
+# Upload an image with API key
 IMAGE_ID=$(curl -X POST "http://localhost:8000/api/v1/upload" \
+  -H "X-API-Key: your-secret-api-key-here" \
   -F "file=@test_image.jpg" | jq -r '.image_id')
 
 # Analyze the image
 curl -X POST "http://localhost:8000/api/v1/analyze" \
+  -H "X-API-Key: your-secret-api-key-here" \
   -H "Content-Type: application/json" \
   -d "{\"image_id\":\"$IMAGE_ID\"}"
 ```

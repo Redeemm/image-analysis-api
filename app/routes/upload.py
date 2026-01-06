@@ -41,7 +41,4 @@ async def upload_image(file: UploadFile = File(..., description="Image file (JPE
         raise
     except Exception as e:
         logger.error(f"Failed to process image upload: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to process image upload: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to process image upload: {str(e)}")
