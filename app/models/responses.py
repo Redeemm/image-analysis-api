@@ -24,13 +24,43 @@ class UploadResponse(BaseResponse):
     file_size: int = Field(..., description="File size in bytes", example=102400)
 
 
-class AnalysisResponse(BaseResponse):
+class ImageMetadata(BaseModel):
+    """Image metadata information"""
+    format: str = Field(..., description="Image format", example="jpeg")
+    width: int = Field(..., description="Image width in pixels", example=1080)
+    height: int = Field(..., description="Image height in pixels", example=1080)
+    file_size_kb: float = Field(..., description="File size in kilobytes", example=842.5)
+    color_space: str = Field(..., description="Color space", example="RGB")
+
+
+class SkinTypeResult(BaseModel):
+    """Skin type detection result"""
+    value: str = Field(..., description="Detected skin type", example="Oily")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0-1)", example=0.92)
+
+
+class IssueResult(BaseModel):
+    """Individual skin issue detection result"""
+    name: str = Field(..., description="Issue name", example="Hyperpigmentation")
+    severity: str = Field(..., description="Issue severity level", example="Medium")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0-1)", example=0.85)
+
+
+class AnalysisResult(BaseModel):
+    """Detailed analysis results"""
+    skin_type: SkinTypeResult = Field(..., description="Skin type analysis")
+    issues: List[IssueResult] = Field(..., description="Detected skin issues")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Overall confidence score (0-1)", example=0.87)
+    analysis_notes: str = Field(..., description="Additional analysis notes", example="Detected Category A with 2 issue(s).")
+
+
+class AnalysisResponse(BaseModel):
     """Image analysis result response"""
+    success: bool = Field(default=True, description="Indicates if the analysis was successful")
     image_id: str = Field(..., description="Image identifier", example="abc123-def456-ghi789")
-    skin_type: str = Field(..., description="Detected skin type", example="Oily")
-    issues: List[str] = Field(..., description="Detected skin issues", example=["Hyperpigmentation", "Acne"])
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0-1)", example=0.87)
-    analysis_notes: str = Field(..., description="Additional analysis notes", example="Detected oily skin with 2 concern(s)")
+    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat() + 'Z', description="Analysis timestamp")
+    image_metadata: ImageMetadata = Field(..., description="Image metadata information")
+    analysis: AnalysisResult = Field(..., description="Analysis results")
 
 
 class ErrorDetail(BaseModel):

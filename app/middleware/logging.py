@@ -1,7 +1,9 @@
 import time
 import uuid
-from fastapi import Request, Response
+
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.utils.logger import correlation_id, get_logger
 
 logger = get_logger(__name__)

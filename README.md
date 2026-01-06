@@ -127,12 +127,35 @@ curl -X POST "http://localhost:8000/api/v1/analyze" \
 ```json
 {
   "success": true,
-  "timestamp": "2024-01-06T12:00:00Z",
   "image_id": "abc123-def456-ghi789",
-  "skin_type": "Oily",
-  "issues": ["Hyperpigmentation", "Acne"],
-  "confidence": 0.87,
-  "analysis_notes": "Detected oily skin with 2 concern(s)"
+  "timestamp": "2026-01-06T14:05:22Z",
+  "image_metadata": {
+    "format": "jpeg",
+    "width": 1080,
+    "height": 1080,
+    "file_size_kb": 842.5,
+    "color_space": "RGB"
+  },
+  "analysis": {
+    "skin_type": {
+      "value": "Oily",
+      "confidence": 0.92
+    },
+    "issues": [
+      {
+        "name": "Hyperpigmentation",
+        "severity": "Medium",
+        "confidence": 0.85
+      },
+      {
+        "name": "Acne",
+        "severity": "High",
+        "confidence": 0.90
+      }
+    ],
+    "confidence": 0.87,
+    "analysis_notes": "Detected Category A with 2 issue(s)."
+  }
 }
 ```
 
