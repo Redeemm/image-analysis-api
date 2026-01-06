@@ -4,33 +4,33 @@ from pathlib import Path
 
 
 class Settings(BaseSettings):
-    """Application settings with environment variable support"""
+    """Application settings loaded from environment variables or .env file"""
 
     # Application
-    app_name: str = "Image Analysis API"
-    app_version: str = "1.0.0"
-    debug: bool = False
-    environment: str = "development"  # development, staging, production
+    app_name: str
+    app_version: str
+    debug: bool
+    environment: str
 
     # API
-    api_v1_prefix: str = "/api/v1"
-    cors_origins: List[str] = ["*"]
+    api_v1_prefix: str
+    cors_origins: List[str]
 
     # Server
-    host: str = "0.0.0.0"
-    port: int = 8000
+    host: str
+    port: int
 
     # Logging
-    log_level: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    log_level: str
 
     # File Upload
-    upload_dir: Path = Path("uploads")
-    max_file_size: int = 5 * 1024 * 1024  # 5MB in bytes
-    allowed_extensions: Set[str] = {"image/jpeg", "image/jpg", "image/png"}
-    allowed_file_extensions: Set[str] = {".jpg", ".jpeg", ".png"}
+    upload_dir: Path
+    max_file_size: int
+    allowed_extensions: Set[str]
+    allowed_file_extensions: Set[str]
 
     # Analysis
-    mock_analysis: bool = True  # Set to False when using real ML model
+    mock_analysis: bool
 
     model_config = SettingsConfigDict(
         env_file=".env",

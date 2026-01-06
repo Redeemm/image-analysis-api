@@ -38,10 +38,10 @@ A FastAPI-based backend service for mobile image upload and analysis.
    pip install -r requirements.txt
    ```
 
-4. **Configure environment (optional):**
+4. **Configure environment (required):**
    ```bash
    cp .env.example .env
-   # Edit .env with your configuration
+   # Edit .env if you need to change any settings
    ```
 
 ## Running the Service
@@ -166,13 +166,18 @@ image-analysis-api/
 
 ## Configuration
 
-Configuration is managed through environment variables or a `.env` file. See `.env.example` for available options.
+All configuration is loaded from the `.env` file (required). Copy `.env.example` to `.env` and modify as needed.
 
 Key settings:
-- `API_V1_PREFIX`: API version prefix (default: `/api/v1`)
-- `LOG_LEVEL`: Logging level (default: `INFO`)
-- `MAX_FILE_SIZE`: Maximum upload size in bytes (default: 5MB)
-- `UPLOAD_DIR`: Image storage directory (default: `uploads`)
+- `APP_NAME`: Application name
+- `APP_VERSION`: Application version
+- `ENVIRONMENT`: Environment (development, staging, production)
+- `API_V1_PREFIX`: API version prefix
+- `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- `MAX_FILE_SIZE`: Maximum upload size in bytes
+- `UPLOAD_DIR`: Image storage directory
+- `ALLOWED_EXTENSIONS`: Allowed MIME types for uploads
+- `ALLOWED_FILE_EXTENSIONS`: Allowed file extensions
 
 ## Testing
 
