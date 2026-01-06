@@ -38,11 +38,6 @@ class AnalysisService:
 
     @staticmethod
     def analyze_image(image_id: str, image_path: Path) -> Dict:
-        """
-        Perform mock analysis on an image.
-
-        Returns structured analysis results with image metadata.
-        """
         # Generate deterministic results based on image_id for consistency
         random.seed(image_id)
 

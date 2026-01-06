@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     # API
     api_v1_prefix: str
+    api_key: str
     cors_origins: List[str]
 
     # Server

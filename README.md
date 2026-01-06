@@ -1,274 +1,142 @@
 # Image Analysis API
 
-A FastAPI-based backend service for mobile image upload and analysis.
+FastAPI backend service for mobile image upload and AI-powered skin analysis.
 
-## Features
+## Quick Start
 
-- Image upload endpoint with validation (JPEG/PNG, max 5MB)
-- Mock image analysis with structured JSON responses
-- Structured logging with correlation IDs for request tracing
-- API versioning (`/api/v1/`)
-- Pydantic models for type-safe request/response validation
-- Environment-based configuration
-- Clean separation of concerns (routes, services, utilities, models)
-- CORS support for mobile app integration
-- Comprehensive error handling
-- Docker support
-
-## Requirements
-
-- Python 3.8+
-- pip
-
-## Installation
-
-1. **Navigate to the project directory:**
-   ```bash
-   cd image-analysis-api
-   ```
-
-2. **Create a virtual environment:**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment (required):**
-   ```bash
-   cp .env.example .env
-   # Edit .env if you need to change any settings
-   ```
-
-## Running the Service
-
-Start the server:
 ```bash
+
+source setup.sh
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at `http://localhost:8000`
+Visit http://localhost:8000/api/v1/docs
 
-## API Documentation
+## Installation
 
-Once running, interactive documentation is available at:
-- **Swagger UI:** http://localhost:8000/api/v1/docs
-- **ReDoc:** http://localhost:8000/api/v1/redoc
-
-## Available Endpoints
-
-### Health Check
-
-**GET /**
-
-Returns service status and version information.
-
+**Automated (Recommended):**
 ```bash
-curl http://localhost:8000/
+source setup.sh
 ```
 
-### Upload Image
+**Manual:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 
-**POST /api/v1/upload**
+# Generate API key
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+# Copy the output and paste it as API_KEY in .env
+```
 
-Upload an image for analysis.
+## Running
 
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: `file` (JPEG or PNG, max 5MB)
+```bash
+source venv/bin/activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-**Example:**
+API: http://localhost:8000
+Docs: http://localhost:8000/api/v1/docs
+
+## Authentication
+
+**Swagger UI:**
+1. Visit http://localhost:8000/api/v1/docs
+2. Click **Authorize** button (🔓)
+3. Enter API key from `.env` file
+
+**cURL:**
+```bash
+-H "X-API-Key: your-api-key"
+```
+
+## API Endpoints
+
+### POST /api/v1/upload
+Upload an image (JPEG/PNG, max 5MB)
+
 ```bash
 curl -X POST "http://localhost:8000/api/v1/upload" \
-  -F "file=@/path/to/image.jpg"
+  -H "X-API-Key: your-api-key" \
+  -F "file=@image.jpg"
 ```
 
-**Response (201):**
-```json
-{
-  "success": true,
-  "timestamp": "2024-01-06T12:00:00Z",
-  "image_id": "abc123-def456-ghi789",
-  "message": "Image uploaded successfully",
-  "filename": "image.jpg",
-  "file_size": 102400
-}
-```
+### POST /api/v1/analyze
+Analyze an uploaded image
 
-Response includes headers:
-- `X-Correlation-ID`: Unique request identifier
-- `X-Process-Time`: Request processing time
-
-### Analyze Image
-
-**POST /api/v1/analyze**
-
-Analyze a previously uploaded image.
-
-**Request:**
-```json
-{
-  "image_id": "abc123-def456-ghi789"
-}
-```
-
-**Example:**
 ```bash
 curl -X POST "http://localhost:8000/api/v1/analyze" \
+  -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
-  -d '{"image_id":"abc123-def456-ghi789"}'
+  -d '{"image_id":"abc123-def456"}'
 ```
 
-**Response (200):**
-```json
-{
-  "success": true,
-  "image_id": "abc123-def456-ghi789",
-  "timestamp": "2026-01-06T14:05:22Z",
-  "image_metadata": {
-    "format": "jpeg",
-    "width": 1080,
-    "height": 1080,
-    "file_size_kb": 842.5,
-    "color_space": "RGB"
-  },
-  "analysis": {
-    "skin_type": {
-      "value": "Oily",
-      "confidence": 0.92
-    },
-    "issues": [
-      {
-        "name": "Hyperpigmentation",
-        "severity": "Medium",
-        "confidence": 0.85
-      },
-      {
-        "name": "Acne",
-        "severity": "High",
-        "confidence": 0.90
-      }
-    ],
-    "confidence": 0.87,
-    "analysis_notes": "Detected Category A with 2 issue(s)."
-  }
-}
-```
+### GET /health
+Health check (no auth required)
 
 ## Project Structure
 
 ```
-image-analysis-api/
-├── app/
-│   ├── main.py                      # FastAPI application entry point
-│   ├── config.py                    # Environment configuration
-│   ├── models/
-│   │   ├── requests.py             # Request schemas
-│   │   └── responses.py            # Response schemas
-│   ├── routes/
-│   │   ├── upload.py               # Upload endpoint
-│   │   └── analyze.py              # Analysis endpoint
-│   ├── services/
-│   │   ├── image_service.py        # Image storage logic
-│   │   └── analysis_service.py     # Mock analysis logic
-│   ├── middleware/
-│   │   └── logging.py              # Request logging middleware
-│   └── utils/
-│       ├── validators.py           # Validation utilities
-│       └── logger.py               # Structured logging
-├── uploads/                         # Image storage directory
-├── .env.example                     # Environment configuration template
-├── requirements.txt                 # Python dependencies
-├── Dockerfile                       # Container configuration
-└── README.md
+app/
+├── main.py              # FastAPI app
+├── config.py            # Environment config
+├── models/              # Pydantic schemas
+├── routes/              # API endpoints
+├── services/            # Business logic
+├── middleware/          # Auth & logging
+└── utils/               # Validators & helpers
 ```
 
 ## Configuration
 
-All configuration is loaded from the `.env` file (required). Copy `.env.example` to `.env` and modify as needed.
+Edit `.env` file (auto-generated by `setup.sh`):
+- `API_KEY` - Authentication key
+- `MAX_FILE_SIZE` - Upload limit (default: 5MB)
+- `LOG_LEVEL` - Logging level
 
-Key settings:
-- `APP_NAME`: Application name
-- `APP_VERSION`: Application version
-- `ENVIRONMENT`: Environment (development, staging, production)
-- `API_V1_PREFIX`: API version prefix
-- `LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-- `MAX_FILE_SIZE`: Maximum upload size in bytes
-- `UPLOAD_DIR`: Image storage directory
-- `ALLOWED_EXTENSIONS`: Allowed MIME types for uploads
-- `ALLOWED_FILE_EXTENSIONS`: Allowed file extensions
+## Features
 
-## Testing
-
-Example workflow:
-
-```bash
-# Start the server
-uvicorn app.main:app --reload
-
-# Upload an image
-IMAGE_ID=$(curl -X POST "http://localhost:8000/api/v1/upload" \
-  -F "file=@test_image.jpg" | jq -r '.image_id')
-
-# Analyze the image
-curl -X POST "http://localhost:8000/api/v1/analyze" \
-  -H "Content-Type: application/json" \
-  -d "{\"image_id\":\"$IMAGE_ID\"}"
-```
+- ✅ Image upload validation (JPEG/PNG, 5MB limit)
+- ✅ Mock skin analysis with detailed results
+- ✅ API key authentication
+- ✅ Swagger UI documentation
+- ✅ Structured logging with correlation IDs
+- ✅ CORS support for mobile apps
 
 ## Docker
 
-Build and run with Docker:
-
+**Build image:**
 ```bash
 docker build -t image-analysis-api .
-docker run -p 8000:8000 image-analysis-api
 ```
 
-## Assumptions
+**Run container:**
+```bash
+docker run -d \
+  -p 8000:8000 \
+  -e API_KEY="your-api-key-here" \
+  -e LOG_LEVEL="INFO" \
+  --name image-api \
+  image-analysis-api
+```
 
-1. **Mock Analysis**: The analysis endpoint returns simulated results. In production, this would integrate with an actual ML model.
+**Generate API key for Docker:**
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
-2. **Local Storage**: Images are stored on the local filesystem. Production would use cloud storage (S3, GCS, etc.).
+**Check logs:**
+```bash
+docker logs image-api
+```
 
-3. **No Authentication**: The API is currently open. Production would require API keys or JWT tokens.
+**Stop container:**
+```bash
+docker stop image-api
+docker rm image-api
+```
 
-4. **No Database**: Image metadata is not persisted. Production would use a database for tracking uploads, analysis history, and user data.
-
-5. **Deterministic Mock Results**: The mock analysis uses the `image_id` as a seed to provide consistent results for the same image.
-
-## Production Improvements
-
-If this were a production system, I would implement:
-
-**Security:**
-- Authentication and authorization (JWT, API keys)
-- Rate limiting
-- Input sanitization and security headers
-
-**Infrastructure:**
-- Cloud storage integration (AWS S3, Google Cloud Storage)
-- Database for metadata (PostgreSQL, MongoDB)
-- Caching layer (Redis)
-- Message queue for async processing (Celery, RabbitMQ)
-
-**Monitoring:**
-- Application performance monitoring
-- Error tracking (Sentry)
-- Centralized logging
-- Metrics and alerting
-
-**Testing:**
-- Unit tests (pytest)
-- Integration tests
-- CI/CD pipeline
-
-**Features:**
-- Analysis history and user tracking
-- Batch processing
-- Webhook notifications
-- Real ML model integration
+The Dockerfile uses multi-stage build for optimized image size and includes health checks.

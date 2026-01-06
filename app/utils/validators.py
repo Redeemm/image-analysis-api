@@ -1,5 +1,5 @@
 """Validation utilities for image uploads"""
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile, HTTPException
 from typing import Tuple
 from app.config import settings
 
@@ -41,10 +41,7 @@ async def validate_image_upload(file: UploadFile) -> Tuple[bool, str]:
         )
 
     if file_size == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Empty file uploaded"
-        )
+        raise HTTPException(status_code=400, detail="Empty file uploaded")
 
     return True, ""
 
